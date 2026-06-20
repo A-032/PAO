@@ -1,0 +1,87 @@
+<link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;700&family=Noto+Sans+JP:wght@400;700&display=swap" rel="stylesheet">
+    
+    
+
+
+
+    <div id="boot-screen">
+        <div class="boot-line" id="line1">SYS_INIT: Booting PAO_KERNEL... OK</div>
+        <div class="boot-line" id="line2">ESTABLISHING CONNECTION TO PUROZEMI_NODE... [100%]</div>
+        <div class="boot-line" id="line3">DECRYPTING USER DATABASE... DONE</div>
+        <div class="boot-line" id="line4" style="margin-top: 20px; font-weight: bold; color: white;">> WELCOME, OBSERVER.</div>
+    </div>
+
+    <header>
+        <div class="header-inner">
+            <div class="top-left-title" id="scramble-title"></div>
+            <nav>
+                <ul>
+                    <li><a href="#about">About</a></li>
+                    <li><a href="#index">Index</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <div class="hero-viewport">
+        <div class="scanlines"></div>
+        
+     <div id="parallax-wrapper">
+    <div class="giant-background-container">
+        <img src="https://i.imgur.com/0zhWnfY.jpeg" alt="background">
+    </div>
+    
+    <div class="giant-stroke-text" id="giant-title" data-text="[ ENCRYPTED_NODE ]"></div>
+</div>
+
+        <div class="profile-badge">
+            <div class="profile-avatar-slot"></div>
+            <div class="profile-info">
+                <h2 id="scramble-name"></h2>
+                <p># Coder/Observer</p>
+            </div>
+        </div>
+    </div>
+
+    <main class="main-content" id="about">
+        <div class="intro-text-block">
+            <p>目的：プログラミングゼミサーバー内における公開ノードの自動分散巡回、およびアクティビティのインデックス化</p>
+            <p>当サイトは有志による観測ログの公表、及びクリエイターデータのアーカイブ化を目的としています。[毎時自動更新]</p>
+        </div>
+
+        <div class="counter-area">
+            <div>TOTAL OBSERVATION LOGS</div>
+            <div class="counter-wrapper">
+                <img src="https://count.getloli.com/@pao?name=pao&theme=original-old&padding=7&offset=0&align=top&scale=1&pixelated=1&darkmode=auto" alt="pao counter">
+            </div>
+        </div>
+
+        <section id="index">
+            <div class="section-title">/ recent_observed_logs</div>
+            <table class="data-table">
+                <thead>
+                    <tr><th>USER_ID</th><th>CATEGORY</th><th>ACTIVITY</th><th>STATUS</th></tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="user-highlight">ゼミ太郎</td>
+                        <td>ACTION / ASSET</td>
+                        <td>作品「ドットクエスト」の新規ビルドを検出</td>
+                        <td class="status-tag">[UPDATED]</td>
+                    </tr>
+                    <tr>
+                        <td class="user-highlight">プロコ_Ch</td>
+                        <td>ANIME / MOVIE</td>
+                        <td>新規作品データを全体公開</td>
+                        <td class="status-tag" style="color: var(--terminal-green);">[ACTIVE]</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <footer>
+            <p>本プロジェクトは有志による研究目的の非公式活動であり、公式の運営元・団体等とは一切関係ありません。</p>
+        </footer>
+    </main>
