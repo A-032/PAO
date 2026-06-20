@@ -104,7 +104,6 @@
             z-index: 1;
         }
 
-        /* 巨大テキスト・パララックスラッパー */
         #parallax-wrapper {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -114,7 +113,6 @@
             z-index: 0;
         }
 
-        /* 巨大テキストのアニメーション設定 */
         .giant-stroke-text {
             position: relative;
             font-size: 13vw;
@@ -127,7 +125,6 @@
             user-select: none;
             pointer-events: none;
             white-space: nowrap;
-            
             opacity: 0;
             z-index: 1;
             animation: 
@@ -156,7 +153,6 @@
             100% { opacity: 1; }
         }
 
-        /* RGBグリッチバースト */
         .giant-stroke-text::before,
         .giant-stroke-text::after {
             content: attr(data-text);
@@ -182,7 +178,6 @@
             99% { opacity: 0; clip-path: inset(0 0 0 0); transform: translate(0); }
         }
 
-        /* --- プロフィールバッジ --- */
         .profile-badge {
             position: absolute; bottom: 40px; left: 40px; display: flex; align-items: center; gap: 16px;
             background: rgba(10, 10, 10, 0.4); backdrop-filter: blur(4px); padding: 12px; border-radius: 8px;
@@ -204,7 +199,6 @@
         .profile-info h2 { font-size: 1.1rem; font-weight: 700; margin-bottom: 2px; }
         .profile-info p { font-size: 0.75rem; color: var(--text-gray); }
 
-        /* --- コンテンツエリア --- */
         .main-content {
             max-width: 800px; margin: 0 auto; padding: 40px 20px 100px 20px; text-align: center;
             opacity: 0; animation: fade-in-up 0.8s ease 2.8s forwards;
@@ -213,7 +207,6 @@
         .intro-text-block { font-size: 0.85rem; line-height: 1.8; color: #cccccc; margin-bottom: 48px; }
         .intro-text-block p { margin-bottom: 8px; }
 
-        /* --- 修正版：Moe Counter スタイル --- */
         .counter-area { margin-bottom: 60px; font-size: 0.8rem; color: var(--text-gray); }
         .counter-wrapper {
             display: inline-block;
@@ -242,29 +235,19 @@
 
         footer { font-size: 0.75rem; color: #444444; padding-top: 40px; border-top: 1px solid var(--border-line); }
 
-        /* --- ロゴ背後の背景画像専用コンテナ --- */
         .giant-background-container {
             position: absolute;
-            top: 50%;
-            left: 50%;
+            top: 50%; left: 50%;
             transform: translate(-50%, -50%);
-            width: 80%; 
-            height: auto;
-            z-index: 0;
-            pointer-events: none;
-            opacity: 0.3; 
+            width: 80%; height: auto;
+            z-index: 0; pointer-events: none; opacity: 0.3; 
         }
 
         .giant-background-container img {
-            width: 100%;
-            height: auto;
-            object-fit: contain;
+            width: 100%; height: auto; object-fit: contain;
             filter: grayscale(100%) contrast(150%);
         }
 
-        /* ========================================================
-           アニメーションスキップ用のCSSオーバーライド
-        ======================================================== */
         body.skip-anim #boot-screen { display: none !important; }
         body.skip-anim .profile-badge,
         body.skip-anim .main-content {
@@ -344,19 +327,8 @@
                 <thead>
                     <tr><th>USER_ID</th><th>CATEGORY</th><th>ACTIVITY</th><th>STATUS</th></tr>
                 </thead>
-                <tbody>
-                    <tr>
-                        <td class="user-highlight">ゼミ太郎</td>
-                        <td>ACTION / ASSET</td>
-                        <td>作品「ドットクエスト」の新規ビルドを検出</td>
-                        <td class="status-tag">[UPDATED]</td>
-                    </tr>
-                    <tr>
-                        <td class="user-highlight">プロコ_Ch</td>
-                        <td>ANIME / MOVIE</td>
-                        <td>新規作品データを全体公開</td>
-                        <td class="status-tag" style="color: var(--terminal-green);">[ACTIVE]</td>
-                    </tr>
+                <tbody id="firestore-data-body">
+                    <tr><td colspan="4" style="text-align:center; color:var(--text-gray);">CONNECTING TO NODE...</td></tr>
                 </tbody>
             </table>
         </section>
@@ -366,9 +338,70 @@
         </footer>
     </main>
 
-    <script>
-        document.addEventListener("DOMContentLoaded", () => {
+    <script type="module">
+        // Firebase Web SDK v10 の読み込み
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        // ========================================================
+        // 【重要】Firebase コンソールから取得した「ウェブアプリ」の設定を入れてね！
+        // ========================================================
+        const firebaseConfig = {
+            apiKey: "YOUR_WEB_API_KEY", // ここにWeb用のAPIキーを入力
+            authDomain: "logg-d7f0e.firebaseapp.com",
+            projectId: "logg-d7f0e",
+            storageBucket: "logg-d7f0e.appspot.com",
+            messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+            appId: "YOUR_APP_ID"
+        };
+
+        // Firebase初期化
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // --- Firestoreからデータを引っ張ってテーブルに書き出す関数 ---
+        async function fetchProzemiUsers() {
+            const tbody = document.getElementById("firestore-data-body");
             
+            try {
+                const querySnapshot = await getDocs(collection(db, "prozemi_users"));
+                tbody.innerHTML = ""; // ローディング表示をクリア
+
+                if (querySnapshot.empty) {
+                    tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:var(--text-gray);">NO LOGS FOUND.</td></tr>`;
+                    return;
+                }
+
+                querySnapshot.forEach((doc) => {
+                    const data = doc.data();
+                    
+                    // Firestore側のフィールド名に合わせてフォールバックを設定
+                    const userId = data.userId || data.name || doc.id; 
+                    const category = data.category || "UNKNOWN";
+                    const activity = data.activity || "NO DATA";
+                    const status = data.status || "ACTIVE";
+
+                    // ステータスの色を動的にちょっと変える処理（お好みで）
+                    const statusStyle = status === "[ACTIVE]" || status === "ACTIVE" ? `style="color: var(--terminal-green);"` : "";
+
+                    const tr = document.createElement("tr");
+                    tr.innerHTML = `
+                        <td class="user-highlight">${userId}</td>
+                        <td>${category}</td>
+                        <td>${activity}</td>
+                        <td class="status-tag" ${statusStyle}>[${status.replace(/[\[\]]/g, '')}]</td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+
+            } catch (error) {
+                console.error("Firestoreデータ取得エラー:", error);
+                tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:var(--glitch-red);">ERROR: ACCESS_DENIED</td></tr>`;
+            }
+        }
+
+        // --- UI演出・既存のコードの制御 ---
+        document.addEventListener("DOMContentLoaded", () => {
             const bootScreen = document.getElementById('boot-screen');
             const titleEl = document.getElementById('scramble-title');
             const nameEl = document.getElementById('scramble-name');
@@ -377,16 +410,15 @@
             const hasPlayed = sessionStorage.getItem('pao_boot_played');
 
             if (hasPlayed) {
-                /* リロード時（2回目以降） */
                 document.body.classList.add('skip-anim');
-                
                 titleEl.innerText = 'p.a.o. database';
                 nameEl.innerText = 'P.A.O.';
                 giantEl.innerText = 'p.a.o. project';
                 giantEl.setAttribute('data-text', 'p.a.o. project');
                 
+                // 初回スキップ時もすぐロード
+                fetchProzemiUsers();
             } else {
-                /* 初回アクセス時 */
                 sessionStorage.setItem('pao_boot_played', 'true');
                 giantEl.innerText = '[ ENCRYPTED_NODE ]';
 
@@ -416,6 +448,9 @@
                     fx1.setText('p.a.o. database');
                     fx2.setText('P.A.O.');
                     fxGiant.setText('p.a.o. project'); 
+                    
+                    // スクラム演出が始まったタイミングあたりでデータをロード
+                    fetchProzemiUsers();
                 }
             }
 
