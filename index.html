@@ -3,22 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>P.A.O. // Purozemi Analytics & Observation</title>
+    <title>P.A.O. DATABASE</title>
+    
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;700;900&family=Noto+Sans+JP:wght@400;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;700&family=Noto+Sans+JP:wght@400;700&display=swap" rel="stylesheet">
     
     <style>
         :root {
-            --bg-dark: #050505;
-            --bg-panel: #0d0d0d;
-            --text-white: #f0f0f0;
+            --bg-dark: #0a0a0a;
+            --text-white: #ffffff;
             --text-gray: #888888;
-            --border-line: #333;
+            --border-line: #222222;
             --terminal-green: #00ff66;
             --glitch-red: #ff0055;
-            --cyber-blue: #00f3ff;
-            --neon-glow: 0 0 10px rgba(0, 255, 102, 0.5), 0 0 20px rgba(0, 255, 102, 0.3);
         }
 
         * {
@@ -35,15 +33,26 @@
             -webkit-font-smoothing: antialiased;
         }
 
-        /* --- 全体エフェクト（CRTモニター風ヴィネット） --- */
-        body::after {
-            content: "";
+        /* --- 起動時ブートスクリーン --- */
+        #boot-screen {
             position: fixed;
-            top: 0; left: 0; width: 100vw; height: 100vh;
-            background: radial-gradient(circle, rgba(0,0,0,0) 50%, rgba(0,0,0,0.6) 100%);
-            pointer-events: none;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: #050505;
+            color: var(--terminal-green);
             z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 40px;
+            font-size: 0.85rem;
+            line-height: 1.5;
+            pointer-events: none;
+            transition: opacity 0.8s ease-in-out, visibility 0.8s;
         }
+        .boot-line { opacity: 0; }
 
         /* --- ヘッダー --- */
         header {
@@ -51,10 +60,8 @@
             position: absolute;
             top: 0;
             left: 0;
-            z-index: 100;
-            background: url('https://i.imgur.com/0zhWnfY.jpeg') center center / cover;
-            border-bottom: 1px solid rgba(0, 255, 102, 0.1);
-            backdrop-filter: blur(4px);
+            z-index: 10;
+            background: linear-gradient(to bottom, rgba(10,10,10,0.8), transparent);
         }
 
         .header-inner {
@@ -66,65 +73,25 @@
         }
 
         .top-left-title {
-            font-size: 0.9rem;
-            font-weight: 900;
-            letter-spacing: 0.1em;
-            color: var(--cyber-blue);
-            text-shadow: 0 0 8px rgba(0, 243, 255, 0.6);
+            font-size: 0.85rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
             min-width: 150px; 
-            text-transform: uppercase;
         }
 
-        nav ul { display: flex; list-style: none; gap: 32px; }
-        nav a { 
-            text-decoration: none; 
-            color: var(--text-white); 
-            font-size: 0.85rem; 
-            font-weight: 700; 
-            text-transform: uppercase;
-            letter-spacing: 0.1em;
-            position: relative;
-            transition: color 0.3s ease; 
-        }
-        
-        nav a::before {
-            content: '';
-            position: absolute;
-            bottom: -4px; left: 0; width: 0%; height: 2px;
-            background-color: var(--terminal-green);
-            transition: width 0.3s ease;
-            box-shadow: 0 0 8px var(--terminal-green);
-        }
-        nav a:hover { color: var(--terminal-green); text-shadow: 0 0 5px var(--terminal-green); }
-        nav a:hover::before { width: 100%; }
+        nav ul { display: flex; list-style: none; gap: 24px; }
+        nav a { text-decoration: none; color: var(--text-white); font-size: 0.8rem; font-weight: 700; opacity: 0.8; transition: opacity 0.2s ease; }
+        nav a:hover { opacity: 1; }
 
         /* --- ヒーローセクション --- */
         .hero-viewport {
             width: 100%;
-            height: 70vh;
+            height: 65vh;
             position: relative;
-            background-color: #000;
+            background: linear-gradient(rgba(0, 0, 0, 0.2), rgba(10, 10, 10, 1)), 
+                        url('background.jpg') center center / cover no-repeat;
+            background-color: #1a1a1a;
             overflow: hidden;
-            border-bottom: 1px solid var(--border-line);
-        }
-
-        /* 動くサイバーグリッド背景 */
-        .cyber-grid {
-            position: absolute;
-            bottom: -50%; left: -50%; width: 200%; height: 200%;
-            background-image: 
-                linear-gradient(rgba(0, 255, 102, 0.2) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(0, 255, 102, 0.2) 1px, transparent 1px);
-            background-size: 40px 40px;
-            transform: perspective(600px) rotateX(60deg);
-            animation: grid-move 10s linear infinite;
-            z-index: 0;
-            opacity: 0.3;
-        }
-
-        @keyframes grid-move {
-            0% { transform: perspective(600px) rotateX(60deg) translateY(0); }
-            100% { transform: perspective(600px) rotateX(60deg) translateY(40px); }
         }
 
         .scanlines {
@@ -134,351 +101,238 @@
                         linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
             background-size: 100% 4px, 3px 100%;
             pointer-events: none;
-            z-index: 10;
-        }
-
-        /* パーティクル用キャンバス */
-        #particles {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
             z-index: 1;
-            pointer-events: none;
-        }
-        .particle {
-            position: absolute;
-            background-color: var(--terminal-green);
-            border-radius: 50%;
-            box-shadow: 0 0 10px var(--terminal-green);
-            opacity: 0;
-            animation: float-up 5s linear infinite;
         }
 
-        @keyframes float-up {
-            0% { transform: translateY(100px) scale(0); opacity: 0; }
-            20% { opacity: 0.8; transform: translateY(50px) scale(1.5); }
-            80% { opacity: 0.5; }
-            100% { transform: translateY(-100px) scale(0); opacity: 0; }
-        }
-
+        /* 巨大テキスト・パララックスラッパー */
         #parallax-wrapper {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
             display: flex;
             align-items: center;
             justify-content: center;
-            z-index: 5;
+            z-index: 0;
         }
 
-        /* --- 巨大ロゴ文字（背景画像・グラデーション対応） --- */
+        /* 巨大テキストのアニメーション設定 */
         .giant-stroke-text {
             position: relative;
-            font-size: 14vw;
-            font-weight: 900;
+            font-size: 13vw;
+            font-weight: 700;
             text-transform: uppercase;
-            letter-spacing: -0.05em;
+            letter-spacing: -0.04em;
             line-height: 1;
-            white-space: nowrap;
+            color: transparent;
+            -webkit-text-stroke: 1px rgba(255, 255, 255, 0.25);
             user-select: none;
             pointer-events: none;
+            white-space: nowrap;
             
-            /* ★ここを変更：文字の背景をグラデーション（または画像）にする */
-            /* 画像にしたい場合は url('your-image.jpg') に変更してください */
-            background: linear-gradient(-45deg, #0a0a0a, #1a1a1a, #003311, #1a1a1a);
-            background-size: 300% 300%;
-            -webkit-background-clip: text;
-            background-clip: text;
-            -webkit-text-fill-color: transparent;
-            color: transparent; /* フォールバック */
-            
-            /* 文字の縁取り */
-            -webkit-text-stroke: 2px rgba(255, 255, 255, 0.4);
-            
+            opacity: 0;
+            z-index: 1;
             animation: 
-                glitch-in 1s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards,
-                float-text 6s ease-in-out infinite 1s,
-                bg-pan 10s ease infinite; /* 背景を動かすアニメーション */
-        }
-
-        @keyframes bg-pan {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
+                glitch-in 1.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) 1.8s forwards,
+                float-text 8s ease-in-out infinite 3.3s;
         }
 
         .scramble-char {
             color: var(--terminal-green);
-            -webkit-text-stroke: 0px;
-            -webkit-text-fill-color: var(--terminal-green);
-            text-shadow: 0 0 15px rgba(0, 255, 102, 0.9);
+            -webkit-text-stroke: 1px var(--terminal-green);
+            text-shadow: 0 0 10px rgba(0, 255, 102, 0.8);
         }
 
         @keyframes float-text {
-            0%, 100% { transform: translateY(0) scale(1); filter: drop-shadow(0 0 0px rgba(0,255,102,0)); }
-            50% { transform: translateY(-15px) scale(1.02); filter: drop-shadow(0 15px 15px rgba(0,255,102,0.15)); }
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
         }
 
         @keyframes glitch-in {
-            0% { opacity: 0; filter: blur(20px); transform: scale(1.1); }
-            20% { opacity: 1; filter: blur(0px); transform: translate(-10px, 5px); }
-            40% { opacity: 0.5; transform: translate(10px, -5px); }
-            60% { opacity: 1; transform: translate(0, 0) skewX(10deg); }
-            80% { transform: skewX(-10deg); }
-            100% { opacity: 1; transform: skewX(0); }
+            0% { opacity: 0; filter: blur(10px); transform: scale(1.05); }
+            10% { opacity: 1; filter: blur(0px); transform: scale(1); }
+            15% { opacity: 0; }
+            20% { opacity: 1; transform: translate(-5px, 2px); }
+            25% { opacity: 0.5; transform: translate(5px, -2px); }
+            30% { opacity: 1; transform: translate(0, 0); }
+            100% { opacity: 1; }
         }
 
-        /* RGBグリッチバースト（より激しく） */
+        /* RGBグリッチバースト */
         .giant-stroke-text::before,
         .giant-stroke-text::after {
             content: attr(data-text);
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+            color: transparent;
             z-index: -1;
             opacity: 0;
         }
-        .giant-stroke-text::before { 
-            -webkit-text-stroke: 3px rgba(0, 255, 102, 0.8); 
-            animation: glitch-burst-1 3s infinite linear; 
-        }
-        .giant-stroke-text::after { 
-            -webkit-text-stroke: 3px rgba(255, 0, 85, 0.8); 
-            animation: glitch-burst-2 3s infinite linear; 
-        }
+        .giant-stroke-text::before { -webkit-text-stroke: 2px rgba(0, 255, 102, 0.7); animation: glitch-burst-1 3.5s infinite linear; }
+        .giant-stroke-text::after { -webkit-text-stroke: 2px rgba(255, 0, 85, 0.7); animation: glitch-burst-2 3.5s infinite linear; }
 
         @keyframes glitch-burst-1 {
-            0%, 90% { opacity: 0; clip-path: inset(0 0 0 0); transform: translate(0); }
-            91% { opacity: 1; clip-path: inset(20% 0 60% 0); transform: translate(-15px, 5px); }
-            93% { opacity: 1; clip-path: inset(70% 0 10% 0); transform: translate(15px, -5px); }
-            95% { opacity: 0; clip-path: inset(0 0 0 0); transform: translate(0); }
+            0%, 93% { opacity: 0; clip-path: inset(0 0 0 0); transform: translate(0); }
+            94% { opacity: 1; clip-path: inset(20% 0 60% 0); transform: translate(-10px, 4px); }
+            96% { opacity: 1; clip-path: inset(70% 0 10% 0); transform: translate(10px, -4px); }
+            98% { opacity: 0; clip-path: inset(0 0 0 0); transform: translate(0); }
         }
         @keyframes glitch-burst-2 {
-            0%, 90% { opacity: 0; clip-path: inset(0 0 0 0); transform: translate(0); }
-            92% { opacity: 1; clip-path: inset(10% 0 80% 0); transform: translate(15px, -5px); }
-            94% { opacity: 1; clip-path: inset(50% 0 30% 0); transform: translate(-15px, 5px); }
-            96% { opacity: 0; clip-path: inset(0 0 0 0); transform: translate(0); }
+            0%, 93% { opacity: 0; clip-path: inset(0 0 0 0); transform: translate(0); }
+            95% { opacity: 1; clip-path: inset(10% 0 80% 0); transform: translate(10px, -4px); }
+            97% { opacity: 1; clip-path: inset(50% 0 30% 0); transform: translate(-10px, 4px); }
+            99% { opacity: 0; clip-path: inset(0 0 0 0); transform: translate(0); }
         }
 
-        /* --- プロフィールバッジ（グラスモーフィズム強化） --- */
+        /* --- プロフィールバッジ --- */
         .profile-badge {
-            position: absolute; bottom: 40px; left: 40px; display: flex; align-items: center; gap: 20px;
-            background: rgba(13, 13, 13, 0.6); backdrop-filter: blur(12px); padding: 16px; border-radius: 12px;
-            border: 1px solid rgba(0, 255, 102, 0.3); z-index: 20;
-            box-shadow: inset 0 0 20px rgba(0, 255, 102, 0.05), 0 10px 30px rgba(0,0,0,0.8);
-            opacity: 0; animation: fade-in-up 0.8s ease 0.5s forwards;
-            transition: transform 0.3s ease, border-color 0.3s ease;
-        }
-        
-        .profile-badge:hover {
-            transform: translateY(-5px);
-            border-color: var(--terminal-green);
-            box-shadow: inset 0 0 20px rgba(0, 255, 102, 0.1), 0 10px 30px rgba(0, 255, 102, 0.2);
+            position: absolute; bottom: 40px; left: 40px; display: flex; align-items: center; gap: 16px;
+            background: rgba(10, 10, 10, 0.4); backdrop-filter: blur(4px); padding: 12px; border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.05); z-index: 2;
+            opacity: 0; animation: fade-in-up 0.8s ease 2.5s forwards;
         }
 
         @keyframes fade-in-up {
-            from { opacity: 0; transform: translateY(30px); }
+            from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
         }
 
         .profile-avatar-slot {
-            width: 64px; height: 64px; background-color: #222;
+            width: 56px; height: 56px; background-color: #333333;
             background: url('avatar.png') center center / cover no-repeat;
-            border-radius: 8px; border: 2px solid var(--border-line);
-            position: relative;
-            overflow: hidden;
-        }
-        
-        /* アバターにスキャンラインエフェクト */
-        .profile-avatar-slot::after {
-            content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: linear-gradient(to bottom, transparent 50%, rgba(0,255,102,0.1) 51%);
-            background-size: 100% 4px;
-            pointer-events: none;
+            border-radius: 6px; border: 1px solid rgba(255,255,255,0.2);
         }
 
-        .profile-info h2 { font-size: 1.2rem; font-weight: 900; margin-bottom: 4px; color: var(--text-white); text-shadow: 0 0 5px rgba(255,255,255,0.3); }
-        .profile-info p { font-size: 0.8rem; color: var(--terminal-green); font-weight: 700; letter-spacing: 0.05em; }
+        .profile-info h2 { font-size: 1.1rem; font-weight: 700; margin-bottom: 2px; }
+        .profile-info p { font-size: 0.75rem; color: var(--text-gray); }
 
         /* --- コンテンツエリア --- */
         .main-content {
-            max-width: 900px; margin: 0 auto; padding: 60px 20px 100px 20px; text-align: center;
-            opacity: 0; animation: fade-in-up 0.8s ease 0.8s forwards;
-            position: relative;
-            z-index: 10;
+            max-width: 800px; margin: 0 auto; padding: 40px 20px 100px 20px; text-align: center;
+            opacity: 0; animation: fade-in-up 0.8s ease 2.8s forwards;
         }
 
-        .intro-text-block { 
-            font-size: 0.95rem; line-height: 1.8; color: #ccc; margin-bottom: 60px; 
-            background: var(--bg-panel); padding: 30px; border-radius: 8px;
-            border: 1px solid var(--border-line);
-            border-left: 4px solid var(--terminal-green);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            text-align: left;
-        }
-        .intro-text-block p { margin-bottom: 12px; }
-        .intro-text-block p:last-child { margin-bottom: 0; }
-        
-        /* ハイライト用装飾 */
-        .highlight-text {
-            color: var(--terminal-green);
-            font-weight: bold;
-        }
+        .intro-text-block { font-size: 0.85rem; line-height: 1.8; color: #cccccc; margin-bottom: 48px; }
+        .intro-text-block p { margin-bottom: 8px; }
 
-        /* --- ★ Moe Counter（巨大化・ネオン装飾） --- */
-        .counter-area { 
-            margin-bottom: 80px; 
-            font-size: 0.9rem; 
-            color: var(--cyber-blue); 
-            font-weight: 900;
-            letter-spacing: 0.1em;
-        }
+        /* --- 修正版：Moe Counter スタイル --- */
+        .counter-area { margin-bottom: 60px; font-size: 0.8rem; color: var(--text-gray); }
         .counter-wrapper {
             display: inline-block;
-            margin-top: 20px;
-            background: linear-gradient(135deg, #000000, #111111);
-            padding: 10px 20px;
-            border: 2px solid var(--cyber-blue);
-            border-radius: 12px;
-            box-shadow: 0 0 20px rgba(0, 243, 255, 0.2), inset 0 0 15px rgba(0, 243, 255, 0.1);
-            position: relative;
-            overflow: hidden;
+            margin-top: 16px;
+            background-color: #000000;
+            padding: 8px 12px;
+            border: 1px solid var(--border-line);
+            border-radius: 6px;
+            transform: scale(1.8);
+            transform-origin: center;
         }
-        
-        /* カウンターの反射エフェクト */
-        .counter-wrapper::before {
-            content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
-            background: linear-gradient(45deg, transparent, rgba(255,255,255,0.05), transparent);
-            transform: rotate(45deg);
-            animation: shine 4s infinite;
-        }
-
-        @keyframes shine {
-            0% { transform: translateX(-100%) rotate(45deg); }
-            100% { transform: translateX(100%) rotate(45deg); }
-        }
-
         .counter-wrapper img {
             display: block;
-            height: 90px; /* ★ サイズを大幅に拡大 (元30px -> 90px) */
-            image-rendering: pixelated; 
-            filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.3));
-            position: relative;
-            z-index: 2;
+            height: 35px; 
+            image-rendering: pixelated;
+            filter: drop-shadow(0 0 4px rgba(0, 255, 102, 0.2)); 
         }
 
-        /* --- テーブル（ホバーアニメーション強化） --- */
-        .section-title { 
-            font-size: 1rem; color: var(--text-white); font-weight: 900; 
-            text-transform: uppercase; letter-spacing: 0.15em; margin-bottom: 30px; 
-            text-align: left; border-bottom: 2px solid var(--border-line); 
-            padding-bottom: 12px; position: relative;
-        }
-        
-        .section-title::after {
-            content: ''; position: absolute; bottom: -2px; left: 0; width: 50px; height: 2px;
-            background-color: var(--glitch-red);
-            box-shadow: 0 0 10px var(--glitch-red);
+        .section-title { font-size: 0.8rem; color: var(--text-gray); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 20px; text-align: left; border-bottom: 1px solid var(--border-line); padding-bottom: 8px; }
+        .data-table { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.8rem; margin-bottom: 60px; }
+        .data-table th { color: var(--text-gray); font-weight: 400; padding: 10px 12px; border-bottom: 1px solid var(--border-line); }
+        .data-table td { padding: 12px; border-bottom: 1px solid var(--border-line); color: #dddddd; }
+        .data-table tr:hover td { color: var(--text-white); background-color: #111111; }
+        .user-highlight { font-weight: 700; color: var(--text-white); }
+        .status-tag { color: #ff9900; }
+
+        footer { font-size: 0.75rem; color: #444444; padding-top: 40px; border-top: 1px solid var(--border-line); }
+
+        /* --- ロゴ背後の背景画像専用コンテナ --- */
+        .giant-background-container {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 80%; 
+            height: auto;
+            z-index: 0;
+            pointer-events: none;
+            opacity: 0.3; 
         }
 
-        .data-table { 
-            width: 100%; border-collapse: collapse; text-align: left; 
-            font-size: 0.9rem; margin-bottom: 60px;
-            background-color: rgba(10,10,10,0.8);
-            backdrop-filter: blur(5px);
-        }
-        
-        .data-table th { 
-            color: var(--text-gray); font-weight: 700; padding: 16px; 
-            border-bottom: 1px solid var(--border-line); 
-            text-transform: uppercase; letter-spacing: 0.1em;
-            background-color: rgba(0,0,0,0.5);
-        }
-        
-        .data-table td { 
-            padding: 16px; border-bottom: 1px solid var(--border-line); color: #ddd; 
-            transition: all 0.2s ease;
-        }
-        
-        .data-table tr {
-            position: relative;
-            transition: background-color 0.2s ease, transform 0.2s ease;
+        .giant-background-container img {
+            width: 100%;
+            height: auto;
+            object-fit: contain;
+            filter: grayscale(100%) contrast(150%);
         }
 
-        .data-table tr:hover {
-            background-color: #1a1a1a;
-            transform: scale(1.01);
-            z-index: 10;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+        /* ========================================================
+           アニメーションスキップ用のCSSオーバーライド
+        ======================================================== */
+        body.skip-anim #boot-screen { display: none !important; }
+        body.skip-anim .profile-badge,
+        body.skip-anim .main-content {
+            opacity: 1 !important;
+            animation: none !important;
+            transform: none !important;
         }
-        
-        .data-table tr:hover td { 
-            color: var(--text-white); 
-            border-bottom-color: var(--terminal-green);
-        }
-        
-        .data-table tr:hover td:first-child {
-            border-left: 3px solid var(--terminal-green);
-        }
-
-        .user-highlight { font-weight: 900; color: var(--text-white); }
-        .status-tag { color: #ff9900; font-weight: 700; letter-spacing: 0.05em; }
-
-        footer { 
-            font-size: 0.8rem; color: #555; padding-top: 40px; 
-            border-top: 1px dashed var(--border-line); 
-            text-transform: uppercase; letter-spacing: 0.1em;
+        body.skip-anim .giant-stroke-text {
+            opacity: 1 !important;
+            animation: float-text 8s ease-in-out infinite !important;
         }
 
         @media (max-width: 768px) {
-            .header-inner { padding: 20px; flex-direction: column; gap: 15px; }
-            .giant-stroke-text { font-size: 18vw; }
-            .profile-badge { bottom: 20px; left: 20px; right: 20px; }
+            .header-inner { padding: 20px; }
+            .giant-stroke-text { font-size: 15vw; }
+            .profile-badge { bottom: 20px; left: 20px; }
             .data-table th:nth-child(2), .data-table td:nth-child(2) { display: none; }
-            .counter-wrapper img { height: 60px; } /* スマホでは少し小さく */
         }
     </style>
 </head>
 <body>
+
+    <div id="boot-screen">
+        <div class="boot-line" id="line1">SYS_INIT: Booting PAO_KERNEL... OK</div>
+        <div class="boot-line" id="line2">ESTABLISHING CONNECTION TO PUROZEMI_NODE... [100%]</div>
+        <div class="boot-line" id="line3">DECRYPTING USER DATABASE... DONE</div>
+        <div class="boot-line" id="line4" style="margin-top: 20px; font-weight: bold; color: white;">&gt; WELCOME, OBSERVER.</div>
+    </div>
 
     <header>
         <div class="header-inner">
             <div class="top-left-title" id="scramble-title"></div>
             <nav>
                 <ul>
-                    <li><a href="#about">SYS_Info</a></li>
-                    <li><a href="#index">Databases</a></li>
+                    <li><a href="#about">About</a></li>
+                    <li><a href="#index">Index</a></li>
                 </ul>
             </nav>
         </div>
     </header>
 
     <div class="hero-viewport">
-        <div class="cyber-grid"></div>
-        <div id="particles"></div>
         <div class="scanlines"></div>
         
         <div id="parallax-wrapper">
-            <div class="giant-stroke-text" id="giant-title" data-text="P.A.O. PROJECT"></div>
+            <div class="giant-background-container">
+                <img src="https://i.imgur.com/0zhWnfY.jpeg" alt="background">
+            </div>
+            <div class="giant-stroke-text" id="giant-title" data-text="[ ENCRYPTED_NODE ]"></div>
         </div>
 
         <div class="profile-badge">
             <div class="profile-avatar-slot"></div>
             <div class="profile-info">
                 <h2 id="scramble-name"></h2>
-                <p>> LEVEL 9_OBSERVER</p>
+                <p># Coder/Observer</p>
             </div>
         </div>
     </div>
 
     <main class="main-content" id="about">
         <div class="intro-text-block">
-            <p><span class="highlight-text">[ INIT_SEQUENCE ]</span></p>
             <p>目的：プログラミングゼミサーバー内における公開ノードの自動分散巡回、およびアクティビティのインデックス化</p>
-            <p>当サイトは有志による観測ログの公表、及びクリエイターデータのアーカイブ化を目的としています。<span class="highlight-text">[毎時自動更新]</span></p>
+            <p>当サイトは有志による観測ログの公表、及びクリエイターデータのアーカイブ化を目的としています。[毎時自動更新]</p>
         </div>
 
         <div class="counter-area">
-            <div>// TOTAL_OBSERVATION_LOGS</div>
+            <div>TOTAL OBSERVATION LOGS</div>
             <div class="counter-wrapper">
                 <img src="https://count.getloli.com/@pao?name=pao&theme=original-old&padding=7&offset=0&align=top&scale=1&pixelated=1&darkmode=auto" alt="pao counter">
             </div>
@@ -501,48 +355,79 @@
                         <td class="user-highlight">プロコ_Ch</td>
                         <td>ANIME / MOVIE</td>
                         <td>新規作品データを全体公開</td>
-                        <td class="status-tag" style="color: var(--terminal-green); text-shadow: 0 0 8px rgba(0,255,102,0.5);">[ACTIVE]</td>
-                    </tr>
-                    <tr>
-                        <td class="user-highlight">ゲスト0x9F</td>
-                        <td>SYSTEM / DB</td>
-                        <td>非公開リポジトリへのアクセスを試行</td>
-                        <td class="status-tag" style="color: var(--glitch-red);">[DENIED]</td>
+                        <td class="status-tag" style="color: var(--terminal-green);">[ACTIVE]</td>
                     </tr>
                 </tbody>
             </table>
         </section>
 
         <footer>
-            <p>End of Transmission. // 非公式観測ノード</p>
+            <p>本プロジェクトは有志による研究目的の非公式活動であり、公式の運営元・団体等とは一切関係ありません。</p>
         </footer>
     </main>
 
     <script>
         document.addEventListener("DOMContentLoaded", () => {
             
+            const bootScreen = document.getElementById('boot-screen');
             const titleEl = document.getElementById('scramble-title');
             const nameEl = document.getElementById('scramble-name');
             const giantEl = document.getElementById('giant-title');
             
-            // ブート画面を削除したため、即座に暗号解読エフェクトを開始
-            const fx1 = new TextScramble(titleEl);
-            const fx2 = new TextScramble(nameEl);
-            const fxGiant = new TextScramble(giantEl);
-            
-            fx1.setText('p.a.o. database');
-            fx2.setText('P.A.O. Admin');
-            fxGiant.setText('p.a.o. project'); 
+            const hasPlayed = sessionStorage.getItem('pao_boot_played');
+
+            if (hasPlayed) {
+                /* リロード時（2回目以降） */
+                document.body.classList.add('skip-anim');
+                
+                titleEl.innerText = 'p.a.o. database';
+                nameEl.innerText = 'P.A.O.';
+                giantEl.innerText = 'p.a.o. project';
+                giantEl.setAttribute('data-text', 'p.a.o. project');
+                
+            } else {
+                /* 初回アクセス時 */
+                sessionStorage.setItem('pao_boot_played', 'true');
+                giantEl.innerText = '[ ENCRYPTED_NODE ]';
+
+                const lines = [
+                    document.getElementById('line1'),
+                    document.getElementById('line2'),
+                    document.getElementById('line3'),
+                    document.getElementById('line4')
+                ];
+
+                setTimeout(() => { lines[0].style.opacity = 1; }, 200);
+                setTimeout(() => { lines[1].style.opacity = 1; }, 600);
+                setTimeout(() => { lines[2].style.opacity = 1; }, 1000);
+                setTimeout(() => { lines[3].style.opacity = 1; }, 1400);
+
+                setTimeout(() => {
+                    bootScreen.style.opacity = 0;
+                    bootScreen.style.visibility = 'hidden';
+                    setTimeout(startScramble, 300);
+                }, 2000);
+
+                function startScramble() {
+                    const fx1 = new TextScramble(titleEl);
+                    const fx2 = new TextScramble(nameEl);
+                    const fxGiant = new TextScramble(giantEl);
+                    
+                    fx1.setText('p.a.o. database');
+                    fx2.setText('P.A.O.');
+                    fxGiant.setText('p.a.o. project'); 
+                }
+            }
 
             /* 暗号解読クラス */
             class TextScramble {
                 constructor(el) {
                     this.el = el;
-                    this.chars = '!<>-_\\/[]{}—=+*^?#_010101ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+                    this.chars = '!<>-_\\/[]{}—=+*^?#_010101';
                     this.update = this.update.bind(this);
                 }
                 setText(newText) {
-                    const oldText = this.el.innerText || '';
+                    const oldText = this.el.innerText;
                     const length = Math.max(oldText.length, newText.length);
                     const promise = new Promise((resolve) => this.resolve = resolve);
                     this.queue = [];
@@ -602,13 +487,13 @@
             const parallaxEl = document.getElementById('parallax-wrapper');
             
             document.addEventListener('mousemove', (e) => {
-                targetX = (e.clientX / window.innerWidth - 0.5) * 50; 
-                targetY = (e.clientY / window.innerHeight - 0.5) * 50;
+                targetX = (e.clientX / window.innerWidth - 0.5) * 40; 
+                targetY = (e.clientY / window.innerHeight - 0.5) * 40;
             });
 
             function animateParallax() {
-                mouseX += (targetX - mouseX) * 0.08;
-                mouseY += (targetY - mouseY) * 0.08;
+                mouseX += (targetX - mouseX) * 0.05;
+                mouseY += (targetY - mouseY) * 0.05;
                 
                 if (parallaxEl) {
                     parallaxEl.style.transform = `translate(${mouseX}px, ${mouseY}px)`;
@@ -616,39 +501,6 @@
                 requestAnimationFrame(animateParallax);
             }
             animateParallax();
-
-            /* パーティクル（光の粒）生成スクリプト */
-            const particleContainer = document.getElementById('particles');
-            const particleCount = 20;
-
-            for(let i = 0; i < particleCount; i++) {
-                createParticle();
-            }
-
-            function createParticle() {
-                const particle = document.createElement('div');
-                particle.classList.add('particle');
-                
-                // ランダムなサイズ、位置、アニメーション遅延を設定
-                const size = Math.random() * 4 + 1;
-                const posX = Math.random() * 100;
-                const delay = Math.random() * 5;
-                const duration = Math.random() * 4 + 3;
-
-                particle.style.width = `${size}px`;
-                particle.style.height = `${size}px`;
-                particle.style.left = `${posX}%`;
-                particle.style.animationDuration = `${duration}s`;
-                particle.style.animationDelay = `${delay}s`;
-
-                particleContainer.appendChild(particle);
-
-                // アニメーション終了時に再生成して無限ループ
-                particle.addEventListener('animationend', () => {
-                    particle.remove();
-                    createParticle();
-                });
-            }
         });
     </script>
 </body>
