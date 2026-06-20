@@ -12,6 +12,7 @@
     <style>
         :root {
             --bg-dark: #0a0a0a;
+            --bg-panel: #111111;
             --text-white: #ffffff;
             --text-gray: #888888;
             --border-line: #222222;
@@ -86,7 +87,7 @@
         /* --- ヒーローセクション --- */
         .hero-viewport {
             width: 100%;
-            height: 65vh;
+            height: 60vh;
             position: relative;
             background: linear-gradient(rgba(0, 0, 0, 0.2), rgba(10, 10, 10, 1)), 
                         url('background.jpg') center center / cover no-repeat;
@@ -200,7 +201,7 @@
         .profile-info p { font-size: 0.75rem; color: var(--text-gray); }
 
         .main-content {
-            max-width: 800px; margin: 0 auto; padding: 40px 20px 100px 20px; text-align: center;
+            max-width: 1000px; margin: 0 auto; padding: 40px 20px 100px 20px; text-align: center;
             opacity: 0; animation: fade-in-up 0.8s ease 2.8s forwards;
         }
 
@@ -226,11 +227,43 @@
         }
 
         .section-title { font-size: 0.8rem; color: var(--text-gray); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 20px; text-align: left; border-bottom: 1px solid var(--border-line); padding-bottom: 8px; }
-        .data-table { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.8rem; margin-bottom: 60px; }
-        .data-table th { color: var(--text-gray); font-weight: 400; padding: 10px 12px; border-bottom: 1px solid var(--border-line); }
-        .data-table td { padding: 12px; border-bottom: 1px solid var(--border-line); color: #dddddd; }
-        .data-table tr:hover td { color: var(--text-white); background-color: #111111; }
+        
+        /* --- スクロール対応コンテナ --- */
+        .table-container {
+            width: 100%;
+            max-height: 500px; /* ここでテーブルの最大高さを固定 */
+            overflow-y: auto;  /* 縦スクロールを有効化 */
+            border: 1px solid var(--border-line);
+            border-radius: 8px;
+            background-color: var(--bg-panel);
+            margin-bottom: 60px;
+            text-align: left;
+        }
+
+        /* スクロールバーのカスタムスタイリング（近未来風） */
+        .table-container::-webkit-scrollbar { width: 6px; height: 6px; }
+        .table-container::-webkit-scrollbar-track { background: #050505; }
+        .table-container::-webkit-scrollbar-thumb { background: #222222; border-radius: 3px; }
+        .table-container::-webkit-scrollbar-thumb:hover { background: var(--terminal-green); }
+
+        .data-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+        
+        /* ヘッダーを固定するマジック */
+        .data-table thead th { 
+            position: sticky; 
+            top: 0; 
+            background-color: #0d0d0d; 
+            z-index: 5;
+            box-shadow: inset 0 -1px 0 var(--border-line); /* 下線の代わり */
+        }
+        
+        .data-table th { color: var(--text-gray); font-weight: 400; padding: 14px 12px; }
+        .data-table td { padding: 14px 12px; border-bottom: 1px solid var(--border-line); color: #dddddd; white-space: nowrap; }
+        .data-table tr:hover td { color: var(--text-white); background-color: #161616; }
+        
         .user-highlight { font-weight: 700; color: var(--text-white); }
+        .token-cell { font-family: 'Geist Mono', monospace; color: #555555; max-width: 250px; overflow: hidden; text-overflow: ellipsis; }
+        .data-table tr:hover .token-cell { color: #aaa; } /* ホバー時に見やすく */
         .status-tag { color: #ff9900; }
 
         footer { font-size: 0.75rem; color: #444444; padding-top: 40px; border-top: 1px solid var(--border-line); }
@@ -264,7 +297,9 @@
             .header-inner { padding: 20px; }
             .giant-stroke-text { font-size: 15vw; }
             .profile-badge { bottom: 20px; left: 20px; }
-            .data-table th:nth-child(2), .data-table td:nth-child(2) { display: none; }
+            /* 画面が狭いときは一部カラムを隠して破綻を防ぐ */
+            .data-table th:nth-child(2), .data-table td:nth-child(2),
+            .data-table th:nth-child(4), .data-table td:nth-child(4) { display: none; }
         }
     </style>
 </head>
@@ -323,14 +358,22 @@
 
         <section id="index">
             <div class="section-title">/ recent_observed_logs</div>
-            <table class="data-table">
-                <thead>
-                    <tr><th>USER_ID</th><th>CATEGORY</th><th>ACTIVITY</th><th>STATUS</th></tr>
-                </thead>
-                <tbody id="firestore-data-body">
-                    <tr><td colspan="4" style="text-align:center; color:var(--text-gray);">CONNECTING TO NODE...</td></tr>
-                </tbody>
-            </table>
+            
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>USER_ID</th>
+                            <th>CATEGORY</th>
+                            <th>ACTIVITY</th>
+                            <th>TOKEN</th> <th>STATUS</th>
+                        </tr>
+                    </thead>
+                    <tbody id="firestore-data-body">
+                        <tr><td colspan="5" style="text-align:center; color:var(--text-gray);">CONNECTING TO NODE...</td></tr>
+                    </tbody>
+                </table>
+            </div>
         </section>
 
         <footer>
@@ -339,15 +382,12 @@
     </main>
 
     <script type="module">
-        // Firebase Web SDK v10 の読み込み
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-        // ========================================================
-        // 【重要】Firebase コンソールから取得した「ウェブアプリ」の設定を入れてね！
-        // ========================================================
+        // ウェブアプリの設定（環境に合わせて書き換えてね）
         const firebaseConfig = {
-            apiKey: "YOUR_WEB_API_KEY", // ここにWeb用のAPIキーを入力
+            apiKey: "YOUR_WEB_API_KEY",
             authDomain: "logg-d7f0e.firebaseapp.com",
             projectId: "logg-d7f0e",
             storageBucket: "logg-d7f0e.appspot.com",
@@ -355,33 +395,31 @@
             appId: "YOUR_APP_ID"
         };
 
-        // Firebase初期化
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        // --- Firestoreからデータを引っ張ってテーブルに書き出す関数 ---
+        // --- Firestoreデータ取得・展開関数 ---
         async function fetchProzemiUsers() {
             const tbody = document.getElementById("firestore-data-body");
             
             try {
                 const querySnapshot = await getDocs(collection(db, "prozemi_users"));
-                tbody.innerHTML = ""; // ローディング表示をクリア
+                tbody.innerHTML = ""; 
 
                 if (querySnapshot.empty) {
-                    tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:var(--text-gray);">NO LOGS FOUND.</td></tr>`;
+                    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:var(--text-gray);">NO LOGS FOUND.</td></tr>`;
                     return;
                 }
 
                 querySnapshot.forEach((doc) => {
                     const data = doc.data();
                     
-                    // Firestore側のフィールド名に合わせてフォールバックを設定
                     const userId = data.userId || data.name || doc.id; 
                     const category = data.category || "UNKNOWN";
                     const activity = data.activity || "NO DATA";
+                    const token = data.token || "--------"; // tokenフィールドの取得
                     const status = data.status || "ACTIVE";
 
-                    // ステータスの色を動的にちょっと変える処理（お好みで）
                     const statusStyle = status === "[ACTIVE]" || status === "ACTIVE" ? `style="color: var(--terminal-green);"` : "";
 
                     const tr = document.createElement("tr");
@@ -389,18 +427,18 @@
                         <td class="user-highlight">${userId}</td>
                         <td>${category}</td>
                         <td>${activity}</td>
-                        <td class="status-tag" ${statusStyle}>[${status.replace(/[\[\]]/g, '')}]</td>
+                        <td class="token-cell" title="${token}">${token}</td> <td class="status-tag" ${statusStyle}>[${status.replace(/[\[\]]/g, '')}]</td>
                     `;
                     tbody.appendChild(tr);
                 });
 
             } catch (error) {
                 console.error("Firestoreデータ取得エラー:", error);
-                tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:var(--glitch-red);">ERROR: ACCESS_DENIED</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:var(--glitch-red);">ERROR: ACCESS_DENIED</td></tr>`;
             }
         }
 
-        // --- UI演出・既存のコードの制御 ---
+        // --- 演出制御（既存ママ） ---
         document.addEventListener("DOMContentLoaded", () => {
             const bootScreen = document.getElementById('boot-screen');
             const titleEl = document.getElementById('scramble-title');
@@ -415,8 +453,6 @@
                 nameEl.innerText = 'P.A.O.';
                 giantEl.innerText = 'p.a.o. project';
                 giantEl.setAttribute('data-text', 'p.a.o. project');
-                
-                // 初回スキップ時もすぐロード
                 fetchProzemiUsers();
             } else {
                 sessionStorage.setItem('pao_boot_played', 'true');
@@ -448,13 +484,10 @@
                     fx1.setText('p.a.o. database');
                     fx2.setText('P.A.O.');
                     fxGiant.setText('p.a.o. project'); 
-                    
-                    // スクラム演出が始まったタイミングあたりでデータをロード
                     fetchProzemiUsers();
                 }
             }
 
-            /* 暗号解読クラス */
             class TextScramble {
                 constructor(el) {
                     this.el = el;
@@ -511,12 +544,9 @@
                         this.frame++;
                     }
                 }
-                randomChar() {
-                    return this.chars[Math.floor(Math.random() * this.chars.length)];
-                }
+                randomChar() { return this.chars[Math.floor(Math.random() * this.chars.length)]; }
             }
 
-            /* マウス追従パララックス */
             let mouseX = 0, mouseY = 0;
             let targetX = 0, targetY = 0;
             const parallaxEl = document.getElementById('parallax-wrapper');
@@ -529,10 +559,7 @@
             function animateParallax() {
                 mouseX += (targetX - mouseX) * 0.05;
                 mouseY += (targetY - mouseY) * 0.05;
-                
-                if (parallaxEl) {
-                    parallaxEl.style.transform = `translate(${mouseX}px, ${mouseY}px)`;
-                }
+                if (parallaxEl) parallaxEl.style.transform = `translate(${mouseX}px, ${mouseY}px)`;
                 requestAnimationFrame(animateParallax);
             }
             animateParallax();
