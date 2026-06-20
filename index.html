@@ -1,87 +1,110 @@
-<link rel="preconnect" href="https://fonts.googleapis.com">
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>P.A.O. // Purozemi Analytics & Observation</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;700&family=Noto+Sans+JP:wght@400;700&display=swap" rel="stylesheet">
     
-    
+    <style>
+        :root {
+            --bg-dark: #0a0a0a;
+            --text-white: #ffffff;
+            --text-gray: #888888;
+            --border-line: #222222;
+            --terminal-green: #00ff66;
+            --glitch-red: #ff0055;
+        }
 
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Geist Mono', 'Noto Sans JP', monospace; }
+        body { background-color: var(--bg-dark); color: var(--text-white); overflow-x: hidden; -webkit-font-smoothing: antialiased; }
 
+        /* --- 起動画面 --- */
+        #boot-screen { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background-color: #050505; color: var(--terminal-green); z-index: 9999; display: flex; flex-direction: column; justify-content: center; padding: 40px; font-size: 0.85rem; pointer-events: none; transition: opacity 0.8s ease-in-out, visibility 0.8s; }
+        .boot-line { opacity: 0; }
+
+        /* --- ヒーローセクション --- */
+        .hero-viewport { width: 100%; height: 65vh; position: relative; background-color: #000; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+
+        /* ★ ロゴ背景画像レイヤー */
+        .giant-background-container { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 60%; z-index: 0; pointer-events: none; opacity: 0.3; }
+        .giant-background-container img { width: 100%; height: auto; object-fit: contain; filter: grayscale(100%) contrast(150%); }
+
+        /* パララックスラッパー */
+        #parallax-wrapper { position: relative; z-index: 1; display: flex; align-items: center; justify-content: center; }
+
+        /* 巨大ロゴテキスト */
+        .giant-stroke-text { position: relative; font-size: 13vw; font-weight: 700; text-transform: uppercase; letter-spacing: -0.04em; color: transparent; -webkit-text-stroke: 1px rgba(255, 255, 255, 0.25); user-select: none; pointer-events: none; white-space: nowrap; opacity: 0; animation: glitch-in 1.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) 1.8s forwards, float-text 8s ease-in-out infinite 3.3s; }
+        
+        @keyframes float-text { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-20px); } }
+        @keyframes glitch-in { 0% { opacity: 0; filter: blur(10px); transform: scale(1.05); } 10% { opacity: 1; } 100% { opacity: 1; } }
+
+        /* カウンター調整 */
+        .counter-wrapper { display: inline-block; margin-top: 16px; background-color: #000; padding: 8px 12px; border: 1px solid var(--border-line); border-radius: 6px; transform: scale(1.8); }
+        .counter-wrapper img { display: block; height: 35px; image-rendering: pixelated; }
+
+        /* 共通設定 */
+        .main-content { max-width: 800px; margin: 0 auto; padding: 40px 20px; text-align: center; }
+        footer { font-size: 0.75rem; color: #444; padding-top: 40px; border-top: 1px solid var(--border-line); }
+
+        /* スキップ設定 */
+        body.skip-anim #boot-screen { display: none !important; }
+        body.skip-anim .giant-stroke-text { opacity: 1 !important; animation: float-text 8s ease-in-out infinite !important; }
+    </style>
+</head>
+<body>
 
     <div id="boot-screen">
         <div class="boot-line" id="line1">SYS_INIT: Booting PAO_KERNEL... OK</div>
-        <div class="boot-line" id="line2">ESTABLISHING CONNECTION TO PUROZEMI_NODE... [100%]</div>
+        <div class="boot-line" id="line2">ESTABLISHING CONNECTION... [100%]</div>
         <div class="boot-line" id="line3">DECRYPTING USER DATABASE... DONE</div>
-        <div class="boot-line" id="line4" style="margin-top: 20px; font-weight: bold; color: white;">> WELCOME, OBSERVER.</div>
+        <div class="boot-line" id="line4" style="margin-top: 20px; font-weight: bold;">> WELCOME, OBSERVER.</div>
     </div>
-
-    <header>
-        <div class="header-inner">
-            <div class="top-left-title" id="scramble-title"></div>
-            <nav>
-                <ul>
-                    <li><a href="#about">About</a></li>
-                    <li><a href="#index">Index</a></li>
-                </ul>
-            </nav>
-        </div>
-    </header>
 
     <div class="hero-viewport">
-        <div class="scanlines"></div>
-        
-     <div id="parallax-wrapper">
-    <div class="giant-background-container">
-        <img src="https://i.imgur.com/0zhWnfY.jpeg" alt="background">
-    </div>
-    
-    <div class="giant-stroke-text" id="giant-title" data-text="[ ENCRYPTED_NODE ]"></div>
-</div>
-
-        <div class="profile-badge">
-            <div class="profile-avatar-slot"></div>
-            <div class="profile-info">
-                <h2 id="scramble-name"></h2>
-                <p># Coder/Observer</p>
-            </div>
+        <div class="giant-background-container">
+            <img src="https://i.imgur.com/0zhWnfY.jpeg" alt="logo-bg">
+        </div>
+        <div id="parallax-wrapper">
+            <div class="giant-stroke-text" id="giant-title"></div>
         </div>
     </div>
 
-    <main class="main-content" id="about">
-        <div class="intro-text-block">
-            <p>目的：プログラミングゼミサーバー内における公開ノードの自動分散巡回、およびアクティビティのインデックス化</p>
-            <p>当サイトは有志による観測ログの公表、及びクリエイターデータのアーカイブ化を目的としています。[毎時自動更新]</p>
-        </div>
-
+    <main class="main-content">
         <div class="counter-area">
             <div>TOTAL OBSERVATION LOGS</div>
             <div class="counter-wrapper">
-                <img src="https://count.getloli.com/@pao?name=pao&theme=original-old&padding=7&offset=0&align=top&scale=1&pixelated=1&darkmode=auto" alt="pao counter">
+                <img src="https://count.getloli.com/@pao?name=pao&theme=original-old&padding=7&offset=0&align=top&scale=1&pixelated=1&darkmode=auto" alt="counter">
             </div>
         </div>
-
-        <section id="index">
-            <div class="section-title">/ recent_observed_logs</div>
-            <table class="data-table">
-                <thead>
-                    <tr><th>USER_ID</th><th>CATEGORY</th><th>ACTIVITY</th><th>STATUS</th></tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td class="user-highlight">ゼミ太郎</td>
-                        <td>ACTION / ASSET</td>
-                        <td>作品「ドットクエスト」の新規ビルドを検出</td>
-                        <td class="status-tag">[UPDATED]</td>
-                    </tr>
-                    <tr>
-                        <td class="user-highlight">プロコ_Ch</td>
-                        <td>ANIME / MOVIE</td>
-                        <td>新規作品データを全体公開</td>
-                        <td class="status-tag" style="color: var(--terminal-green);">[ACTIVE]</td>
-                    </tr>
-                </tbody>
-            </table>
-        </section>
-
-        <footer>
-            <p>本プロジェクトは有志による研究目的の非公式活動であり、公式の運営元・団体等とは一切関係ありません。</p>
-        </footer>
+        <footer><p>本プロジェクトは非公式の研究活動です。</p></footer>
     </main>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const giantEl = document.getElementById('giant-title');
+            const hasPlayed = sessionStorage.getItem('pao_boot_played');
+
+            if (hasPlayed) {
+                document.body.classList.add('skip-anim');
+                giantEl.innerText = 'p.a.o. project';
+            } else {
+                sessionStorage.setItem('pao_boot_played', 'true');
+                // 初回のみブート演出
+                setTimeout(() => { document.getElementById('boot-screen').style.opacity = 0; }, 2000);
+                setTimeout(() => { giantEl.innerText = 'p.a.o. project'; }, 2300);
+            }
+
+            // パララックス
+            let mouseX = 0, mouseY = 0;
+            document.addEventListener('mousemove', (e) => {
+                mouseX = (e.clientX / window.innerWidth - 0.5) * 40;
+                mouseY = (e.clientY / window.innerHeight - 0.5) * 40;
+                document.getElementById('parallax-wrapper').style.transform = `translate(${mouseX}px, ${mouseY}px)`;
+            });
+        });
+    </script>
+</body>
+</html>
