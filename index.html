@@ -482,10 +482,10 @@
 
             if (hasPlayed) {
                 document.body.classList.add('skip-anim');
-                titleEl.innerText = 'p.a.o. database';
-                nameEl.innerText = 'P.A.O.';
-                giantEl.innerText = 'p.a.o. project';
-                giantEl.setAttribute('data-text', 'p.a.o. project');
+                titleEl.innerText = 'DUSC database';
+                nameEl.innerText = 'DUSC';
+                giantEl.innerText = 'DUSC project';
+                giantEl.setAttribute('data-text', 'DUSC. project');
                 fetchProzemiUsersFromCSV();
             } else {
                 sessionStorage.setItem('pao_boot_played', 'true');
@@ -514,9 +514,9 @@
                     const fx2 = new TextScramble(nameEl);
                     const fxGiant = new TextScramble(giantEl);
                     
-                    fx1.setText('p.a.o. database');
-                    fx2.setText('P.A.O.');
-                    fxGiant.setText('p.a.o. project'); 
+                    fx1.setText('DUSC. database');
+                    fx2.setText('DUSC.');
+                    fxGiant.setText('DUSC. project'); 
                     fetchProzemiUsersFromCSV();
                 }
             }
