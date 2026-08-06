@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>High Quality 3D Backrooms (Fixed Camera Controls)</title>
+    <style>
+        body { margin: 0; padding: 0; overflow: hidden; background-color: #000; font-family: 'Courier New', Courier, monospace; user-select: none; }
+        #canvas-container { width: 100vw; height: 100vh; }
+        #crosshair { position: absolute; top: 50%; left: 50%; width: 6px; height: 6px; background-color: rgba(255, 255, 255, 0.4); border-radius: 50%; transform: translate(-50%, -50%); pointer-events: none; }
+        #blocker { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.85); display: flex; flex-direction: column; justify-content: center; align-items: center; color: #d4c88a; text-align: center; z-index: 10; cursor: pointer; }
+        h1 { font-size: 3rem; margin-bottom: 10px; text-shadow: 0 0 10px rgba(212, 200, 138, 0.5); letter-spacing: 5px; }
+        p { font-size: 1.2rem; color: #a09560; }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/CopyShader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/EffectComposer.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/RenderPass.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/ShaderPass.js"></script>
+</head>
+<body>
+    <div id="canvas-container"></div>
+    <div id="crosshair"></div>
+    <div id="blocker">
+        <h1></h1>
+        <p></p>
+    </div>
+
+    <script>
+        // --- 設定変数 ---
+        const MAP_SIZE = 20;
+        const CELL_SIZE = 4;
+        const WALL_HEIGHT = 3.2;
+        const PLAYER_HEIGHT = 1.6;
+
+        // --- 基本セットアップ ---
+        const container = document.getElementById('canvas-container');
+        const scene = new THREE.Scene();
+        scene.fog = new THREE.FogExp2(0x11100a, 0.09);
+
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 50);
+        camera.rotation.order = 'YXZ'; // ★視点制御で最も重要な回転順序（Y:左右 -> X:上下）
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        renderer.toneMapping = THREE.ACESFilmicToneMapping;
+        renderer.toneMappingExposure = 1.0;
+        container.appendChild(renderer.domElement);
+
+        // --- テクスチャ生成 ---
+        function createWallTexture() {
+            const canvas = document.createElement('canvas'); canvas.width = 256; canvas.height = 256;
+            const ctx = canvas.getContext('2d'); ctx.fillStyle = '#b79a55'; ctx.fillRect(0, 0, 256, 256);
+            ctx.fillStyle = '#9e8446'; for (let i = 0; i < 256; i += 16) ctx.fillRect(i, 0, 8, 256);
+            for (let i = 0; i < 3000; i++) { ctx.fillStyle = `rgba(50, 40, 15, ${Math.random() * 0.15})`; ctx.fillRect(Math.random() * 256, Math.random() * 256, 4, 4); }
+            const texture = new THREE.CanvasTexture(canvas); texture.wrapS = THREE.RepeatWrapping; texture.wrapT = THREE.RepeatWrapping; return texture;
+        }
+        function createCarpetTexture() {
+            const canvas = document.createElement('canvas'); canvas.width = 256; canvas.height = 256;
+            const ctx = canvas.getContext('2d'); ctx.fillStyle = '#4a4328'; ctx.fillRect(0, 0, 256, 256);
+            for (let i = 0; i < 10000; i++) { const val = Math.random() * 40; ctx.fillStyle = `rgb(${70+val}, ${60+val}, ${35+val})`; ctx.fillRect(Math.random() * 256, Math.random() * 256, 2, 2); }
+            const texture = new THREE.CanvasTexture(canvas); texture.wrapS = THREE.RepeatWrapping; texture.wrapT = THREE.RepeatWrapping; texture.repeat.set(MAP_SIZE, MAP_SIZE); return texture;
+        }
+        function createCeilingTexture() {
+            const canvas = document.createElement('canvas'); canvas.width = 256; canvas.height = 256;
+            const ctx = canvas.getContext('2d'); ctx.fillStyle = '#c1bd9b'; ctx.fillRect(0, 0, 256, 256);
+            ctx.strokeStyle = '#7a7661'; ctx.lineWidth = 4; ctx.strokeRect(0, 0, 256, 256);
+            const texture = new THREE.CanvasTexture(canvas); texture.wrapS = THREE.RepeatWrapping; texture.wrapT = THREE.RepeatWrapping; texture.repeat.set(MAP_SIZE, MAP_SIZE); return texture;
+        }
+
+        const wallMat = new THREE.MeshStandardMaterial({ map: createWallTexture(), roughness: 0.8 });
+        const carpetMat = new THREE.MeshStandardMaterial({ map: createCarpetTexture(), roughness: 0.6 });
+        const ceilingMat = new THREE.MeshStandardMaterial({ map: createCeilingTexture(), roughness: 0.9 });
+
+        // --- マップ生成 ---
+        const map = [];
+        for (let x = 0; x < MAP_SIZE; x++) { map[x] = []; for (let z = 0; z < MAP_SIZE; z++) { map[x][z] = (x === 0 || x === MAP_SIZE - 1 || z === 0 || z === MAP_SIZE - 1) ? 1 : (Math.random() < 0.25 ? 1 : 0); } }
+        map[2][2] = 0; map[2][3] = 0; map[3][2] = 0;
+
+        const floorGeo = new THREE.PlaneGeometry(MAP_SIZE * CELL_SIZE, MAP_SIZE * CELL_SIZE);
+        const floor = new THREE.Mesh(floorGeo, carpetMat); floor.rotation.x = -Math.PI / 2; floor.position.set((MAP_SIZE * CELL_SIZE)/2 - CELL_SIZE/2, 0, (MAP_SIZE * CELL_SIZE)/2 - CELL_SIZE/2); scene.add(floor);
+        const ceiling = new THREE.Mesh(floorGeo, ceilingMat); ceiling.rotation.x = Math.PI / 2; ceiling.position.set((MAP_SIZE * CELL_SIZE)/2 - CELL_SIZE/2, WALL_HEIGHT, (MAP_SIZE * CELL_SIZE)/2 - CELL_SIZE/2); scene.add(ceiling);
+
+        const wallGeo = new THREE.BoxGeometry(CELL_SIZE, WALL_HEIGHT, CELL_SIZE);
+        const wallGroup = new THREE.Group();
+        const flickerLights = [];
+        const lightGeo = new THREE.PlaneGeometry(1.5, 0.6);
+
+        for (let x = 0; x < MAP_SIZE; x++) {
+            for (let z = 0; z < MAP_SIZE; z++) {
+                const posX = x * CELL_SIZE; const posZ = z * CELL_SIZE;
+                if (map[x][z] === 1) { const wall = new THREE.Mesh(wallGeo, wallMat); wall.position.set(posX, WALL_HEIGHT / 2, posZ); wallGroup.add(wall); }
+                else if (Math.random() < 0.15) {
+                    const lightMat = new THREE.MeshBasicMaterial({ color: 0xfffee0 }); const lightMesh = new THREE.Mesh(lightGeo, lightMat); lightMesh.position.set(posX, WALL_HEIGHT - 0.01, posZ); lightMesh.rotation.x = Math.PI / 2; scene.add(lightMesh);
+                    const pLight = new THREE.PointLight(0xfff5c0, 1.5, 12); pLight.position.set(posX, WALL_HEIGHT - 0.3, posZ); scene.add(pLight);
+                    flickerLights.push({ light: pLight, mesh: lightMesh, seed: Math.random() * 100 });
+                }
+            }
+        }
+        scene.add(wallGroup);
+        const ambLight = new THREE.AmbientLight(0xd4c88a, 0.6); scene.add(ambLight);
+        const playerLight = new THREE.PointLight(0xfffae0, 0.8, 10); scene.add(playerLight);
+
+        // --- ポストエフェクト ---
+        const composer = new THREE.EffectComposer(renderer); composer.addPass(new THREE.RenderPass(scene, camera));
+        const BackroomsShader = {
+            uniforms: { "tDiffuse": { value: null }, "time": { value: 0.0 } },
+            vertexShader: `varying vec2 vUv; void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
+            fragmentShader: `uniform sampler2D tDiffuse; uniform float time; varying vec2 vUv; float rand(vec2 co) { return fract(sin(dot(co.xy, vec2(12.9898, 78.233))) * 43758.5453); } void main() { vec2 uv = vUv; vec2 coord = vUv - 0.5; float dist = dot(coord, coord); uv += coord * dist * 0.12; float amount = 0.0025; float r = texture2D(tDiffuse, uv + vec2(amount, 0.0)).r; float g = texture2D(tDiffuse, uv).g; float b = texture2D(tDiffuse, uv - vec2(amount, 0.0)).b; vec3 col = vec3(r, g, b); float vignette = uv.x * uv.y * (1.0 - uv.x) * (1.0 - uv.y); vignette = clamp(pow(16.0 * vignette, 0.4), 0.0, 1.0); col *= vignette; float noise = (rand(uv * time) - 0.5) * 0.06; col += noise; gl_FragColor = vec4(col, 1.0); }`
+        };
+        const customPass = new THREE.ShaderPass(BackroomsShader); composer.addPass(customPass);
+
+        // --- ★堅牢なカスタムポインターロック＆カメラ回転処理 ---
+        let isLocked = false;
+        let pitch = 0; // 上下回転（ラジアン）
+        let yaw = 0;   // 左右回転（ラジアン）
+
+        const blocker = document.getElementById('blocker');
+
+        blocker.addEventListener('click', () => {
+            document.body.requestPointerLock();
+        });
+
+        document.addEventListener('pointerlockchange', () => {
+            isLocked = document.pointerLockElement === document.body;
+            blocker.style.display = isLocked ? 'none' : 'flex';
+        });
+
+        // マウス移動イベントハンドラ（上下反転防止＆限界角度クランプ）
+        document.addEventListener('mousemove', (event) => {
+            if (!isLocked) return;
+
+            const sensitivity = 0.002; // 感度
+
+            // 左右回転（Y軸）
+            yaw -= event.movementX * sensitivity;
+
+            // 上下回転（X軸）：減算で通常操作（前で上、手前で下）
+            pitch -= event.movementY * sensitivity;
+
+            // ★角度制限（真上・真下の85度手前でストップさせ反転を防ぐ）
+            const maxPitch = Math.PI / 2 - 0.08; // 約85度
+            pitch = Math.max(-maxPitch, Math.min(maxPitch, pitch));
+
+            // カメラにオイラー角を適用
+            camera.rotation.x = pitch;
+            camera.rotation.y = yaw;
+        });
+
+        // --- 移動状態 ---
+        const moveState = { forward: false, backward: false, left: false, right: false };
+        const velocity = new THREE.Vector3();
+
+        document.addEventListener('keydown', (e) => {
+            if (!isLocked) return;
+            switch (e.code) {
+                case 'KeyW': moveState.forward = true; break;
+                case 'KeyS': moveState.backward = true; break;
+                case 'KeyA': moveState.left = true; break;
+                case 'KeyD': moveState.right = true; break;
+            }
+        });
+        document.addEventListener('keyup', (e) => {
+            switch (e.code) {
+                case 'KeyW': moveState.forward = false; break;
+                case 'KeyS': moveState.backward = false; break;
+                case 'KeyA': moveState.left = false; break;
+                case 'KeyD': moveState.right = false; break;
+            }
+        });
+
+        function checkCollision(newPos) {
+            const playerRadius = 0.4; const gridX = Math.round(newPos.x / CELL_SIZE); const gridZ = Math.round(newPos.z / CELL_SIZE);
+            for (let x = gridX - 1; x <= gridX + 1; x++) { for (let z = gridZ - 1; z <= gridZ + 1; z++) { if (x >= 0 && x < MAP_SIZE && z >= 0 && z < MAP_SIZE) { if (map[x][z] === 1) { const minX = x * CELL_SIZE - CELL_SIZE / 2 - playerRadius; const maxX = x * CELL_SIZE + CELL_SIZE / 2 + playerRadius; const minZ = z * CELL_SIZE - CELL_SIZE / 2 - playerRadius; const maxZ = z * CELL_SIZE + CELL_SIZE / 2 + playerRadius; if (newPos.x > minX && newPos.x < maxX && newPos.z > minZ && newPos.z < maxZ) return true; } } } }
+            return false;
+        }
+
+        // カメラ・プレイヤーの位置管理
+        const playerPhysicalPosition = new THREE.Vector3(2 * CELL_SIZE, 0, 2 * CELL_SIZE);
+        const bobState = { timer: 0, baseSpeed: 10, yAmount: 0.04, xAmount: 0.02, tiltAmount: 0.01 };
+
+        // --- メインループ ---
+        let prevTime = performance.now();
+
+        function animate() {
+            requestAnimationFrame(animate);
+
+            const time = performance.now();
+            const delta = (time - prevTime) / 1000;
+            prevTime = time;
+
+            if (isLocked) {
+                // 移動減衰
+                velocity.x -= velocity.x * 10.0 * delta;
+                velocity.z -= velocity.z * 10.0 * delta;
+
+                const speed = 5.5;
+                const dirZ = Number(moveState.forward) - Number(moveState.backward);
+                const dirX = Number(moveState.right) - Number(moveState.left);
+
+                if (dirZ !== 0) velocity.z -= dirZ * speed * 10.0 * delta;
+                if (dirX !== 0) velocity.x -= dirX * speed * 10.0 * delta;
+
+                // 視点の向き（Yaw）に合わせて移動ベクトルを回転
+                const forward = new THREE.Vector3(0, 0, -1).applyAxisAngle(new THREE.Vector3(0, 1, 0), yaw);
+                const right = new THREE.Vector3(1, 0, 0).applyAxisAngle(new THREE.Vector3(0, 1, 0), yaw);
+
+                const moveVector = new THREE.Vector3();
+                if (moveState.forward) moveVector.add(forward);
+                if (moveState.backward) moveVector.sub(forward);
+                if (moveState.right) moveVector.add(right);
+                if (moveState.left) moveVector.sub(right);
+                moveVector.normalize();
+
+                // 物理移動処理
+                const nextPos = playerPhysicalPosition.clone();
+                if (moveVector.lengthSq() > 0) {
+                    const step = moveVector.multiplyScalar(speed * delta);
+                    
+                    // X移動衝突チェック
+                    nextPos.x += step.x;
+                    if (!checkCollision(new THREE.Vector3(nextPos.x, PLAYER_HEIGHT, playerPhysicalPosition.z))) {
+                        playerPhysicalPosition.x = nextPos.x;
+                    }
+                    
+                    // Z移動衝突チェック
+                    nextPos.z += step.z;
+                    if (!checkCollision(new THREE.Vector3(playerPhysicalPosition.x, PLAYER_HEIGHT, nextPos.z))) {
+                        playerPhysicalPosition.z = nextPos.z;
+                    }
+                }
+
+                // --- 揺れ（Head Bobbing） ---
+                const isMoving = moveVector.lengthSq() > 0;
+                if (isMoving) {
+                    bobState.timer += delta * bobState.baseSpeed;
+                    const bobY = Math.sin(bobState.timer * 2) * bobState.yAmount;
+                    const bobX = Math.cos(bobState.timer) * bobState.xAmount;
+                    const bobTilt = Math.cos(bobState.timer) * bobState.tiltAmount;
+
+                    camera.position.x = playerPhysicalPosition.x;
+                    camera.position.z = playerPhysicalPosition.z;
+                    camera.position.y = PLAYER_HEIGHT + bobY;
+
+                    // 左右の横揺れを適用
+                    camera.translateX(bobX);
+                    camera.rotation.z = bobTilt;
+                } else {
+                    camera.position.y = THREE.MathUtils.lerp(camera.position.y, PLAYER_HEIGHT, delta * 5);
+                    camera.position.x = THREE.MathUtils.lerp(camera.position.x, playerPhysicalPosition.x, delta * 5);
+                    camera.position.z = THREE.MathUtils.lerp(camera.position.z, playerPhysicalPosition.z, delta * 5);
+                    camera.rotation.z = THREE.MathUtils.lerp(camera.rotation.z, 0, delta * 5);
+                }
+
+                playerLight.position.set(playerPhysicalPosition.x, PLAYER_HEIGHT, playerPhysicalPosition.z);
+            }
+
+            // フリッカー処理
+            const elapsed = time * 0.001;
+            flickerLights.forEach(item => {
+                const flicker = Math.sin(elapsed * 12 + item.seed) * Math.cos(elapsed * 27 + item.seed);
+                if (flicker > 0.85) { 
+                    item.light.intensity = 0.05;
+                    item.mesh.material.color.setHex(0x222222);
+                } else {
+                    item.light.intensity = 1.5;
+                    item.mesh.material.color.setHex(0xfffee0);
+                }
+            });
+
+            customPass.uniforms["time"].value = elapsed;
+            composer.render();
+        }
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            composer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        animate();
+    </script>
+</body>
+</html>
