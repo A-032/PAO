@@ -212,7 +212,7 @@
         .intro-text-block h3 { font-size: 0.95rem; margin-bottom: 6px; font-weight: normal; }
         .intro-text-block p { margin-top: 16px; margin-bottom: 4px; color: var(--text-gray); }
 
-        .counter-area { margin-bottom: 60px; font-size: 0.8rem; color: var(--text-gray); }
+        .counter-area { margin-bottom: 40px; font-size: 0.8rem; color: var(--text-gray); }
         .counter-wrapper {
             display: inline-block;
             margin-top: 16px;
@@ -228,6 +228,77 @@
             height: 35px; 
             image-rendering: pixelated;
             filter: drop-shadow(0 0 4px rgba(0, 255, 102, 0.2)); 
+        }
+
+        /* --- サイバーパンク・スタイリッシュダウンロードボタン --- */
+        .download-action-area {
+            margin: 50px 0 60px 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .btn-download-cyber {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            padding: 14px 32px;
+            background: #0d0d0d;
+            color: var(--terminal-green);
+            font-family: 'Geist Mono', monospace;
+            font-size: 0.85rem;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-decoration: none;
+            text-transform: uppercase;
+            border: 1px solid var(--terminal-green);
+            border-radius: 4px;
+            box-shadow: 0 0 15px rgba(0, 255, 102, 0.15), inset 0 0 10px rgba(0, 255, 102, 0.05);
+            overflow: hidden;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            cursor: pointer;
+        }
+
+        .btn-download-cyber::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(0, 255, 102, 0.25), transparent);
+            transition: left 0.6s ease;
+        }
+
+        .btn-download-cyber:hover::before {
+            left: 100%;
+        }
+
+        .btn-download-cyber:hover {
+            background: var(--terminal-green);
+            color: #000000;
+            box-shadow: 0 0 25px rgba(0, 255, 102, 0.6);
+            transform: translateY(-2px);
+        }
+
+        .btn-download-cyber .icon-dl {
+            width: 18px;
+            height: 18px;
+            fill: currentColor;
+            transition: transform 0.3s ease;
+        }
+
+        .btn-download-cyber:hover .icon-dl {
+            transform: translateY(2px);
+        }
+
+        .download-subtext {
+            font-size: 0.7rem;
+            color: var(--text-gray);
+            letter-spacing: 0.05em;
         }
 
         .section-title { font-size: 0.8rem; color: var(--text-gray); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 20px; text-align: left; border-bottom: 1px solid var(--border-line); padding-bottom: 8px; }
@@ -302,6 +373,7 @@
             .header-inner { padding: 20px; }
             .giant-stroke-text { font-size: 15vw; }
             .profile-badge { bottom: 20px; left: 20px; }
+            .btn-download-cyber { width: 100%; max-width: 320px; }
         }
     </style>
 </head>
@@ -363,6 +435,17 @@
             <div class="counter-wrapper">
                 <img src="https://count.getloli.com/@pao?name=pao&theme=original-old&padding=7&offset=0&align=top&scale=1&pixelated=1&darkmode=auto" alt="pao counter">
             </div>
+        </div>
+
+        <!-- ダウンロードボタンエリア -->
+        <div class="download-action-area">
+            <a href="all_data.txt" download="dusc_all_data.txt" class="btn-download-cyber">
+                <svg class="icon-dl" viewBox="0 0 24 24">
+                    <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/>
+                </svg>
+                <span>EXPORT_ALL_DATA [.TXT]</span>
+            </a>
+            <span class="download-subtext">// FORMAT: UTF-8 PLAIN TEXT | FULL ARCHIVE LOGS</span>
         </div>
 
         <section id="index">
